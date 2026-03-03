@@ -1,0 +1,5 @@
+{
+  "name": "Livestock Heat Stress Calculator",
+  "description": "Calcolatore dell'indice THI (Temperature-Humidity Index) per la gestione dello stress da calore negli allevamenti zootecnici, con consigli tecnici e stime delle perdite produttive.",
+  "requestFramePermissions": []
+}
