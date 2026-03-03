@@ -24,7 +24,8 @@ import {
   XAxis, 
   YAxis, 
   CartesianGrid, 
-  Tooltip 
+  Tooltip,
+  ReferenceLine
 } from 'recharts';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -209,8 +210,8 @@ export default function App() {
   const sensitivityData = useMemo(() => {
     // Range +/- 2°C with 0.2°C step (21 points)
     const tempRange = Array.from({ length: 21 }, (_, i) => parseFloat((temp - 2 + i * 0.2).toFixed(1)));
-    // Range +/- 5% with 1% step (11 points)
-    const humidityRange = Array.from({ length: 11 }, (_, i) => humidity - 5 + i);
+    // Range +/- 10% with 1% step (21 points)
+    const humidityRange = Array.from({ length: 21 }, (_, i) => humidity - 10 + i);
 
     const tempSensitivity = tempRange.map(t => ({
       name: `${t}°C`,
@@ -224,7 +225,21 @@ export default function App() {
       current: h === humidity
     }));
 
-    return { tempSensitivity, humiditySensitivity };
+    // Calculate critical points (where THI crosses thresholds)
+    const thresholds = [72, 75, 79, 84];
+    const k = 1 - humidity / 100;
+    
+    const criticalTemps = thresholds.map(th => {
+      const t = (th - 32 - 14.3 * k) / (1.8 - k);
+      return { threshold: th, value: parseFloat(t.toFixed(1)) };
+    }).filter(cp => cp.value >= temp - 2 && cp.value <= temp + 2);
+
+    const criticalHumidities = thresholds.map(th => {
+      const h = 100 * (1 + (th - 1.8 * temp - 32) / (temp - 14.3));
+      return { threshold: th, value: Math.round(h) };
+    }).filter(cp => cp.value >= humidity - 10 && cp.value <= humidity + 10);
+
+    return { tempSensitivity, humiditySensitivity, criticalTemps, criticalHumidities };
   }, [temp, humidity]);
 
   const riskInfo = RISK_CONFIG[calculations.risk];
@@ -438,7 +453,7 @@ export default function App() {
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-6">Variazione THI vs Temperatura</p>
               <div className="h-56 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={sensitivityData.tempSensitivity} margin={{ left: 10, right: 10, top: 10, bottom: 20 }}>
+                  <LineChart data={sensitivityData.tempSensitivity} margin={{ left: 10, right: 30, top: 10, bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                     <XAxis 
                       dataKey="name" 
@@ -461,6 +476,10 @@ export default function App() {
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                       labelStyle={{ fontWeight: 'bold', fontSize: '12px', color: '#1e293b' }}
                     />
+                    <ReferenceLine y={72} stroke="#f59e0b" strokeDasharray="3 3" label={{ position: 'right', value: '72', fill: '#f59e0b', fontSize: 10, fontWeight: 'bold' }} />
+                    <ReferenceLine y={75} stroke="#f97316" strokeDasharray="3 3" label={{ position: 'right', value: '75', fill: '#f97316', fontSize: 10, fontWeight: 'bold' }} />
+                    <ReferenceLine y={79} stroke="#dc2626" strokeDasharray="3 3" label={{ position: 'right', value: '79', fill: '#dc2626', fontSize: 10, fontWeight: 'bold' }} />
+                    <ReferenceLine y={84} stroke="#9333ea" strokeDasharray="3 3" label={{ position: 'right', value: '84', fill: '#9333ea', fontSize: 10, fontWeight: 'bold' }} />
                     <Line 
                       type="monotone" 
                       dataKey="thi" 
@@ -475,13 +494,26 @@ export default function App() {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
+              {sensitivityData.criticalTemps.length > 0 && (
+                <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">Punti di Transizione</p>
+                  <div className="space-y-1">
+                    {sensitivityData.criticalTemps.map((cp, i) => (
+                      <div key={i} className="flex justify-between text-[10px]">
+                        <span className="text-slate-500">Soglia {cp.threshold}:</span>
+                        <span className="font-bold text-slate-700">{cp.value}°C</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="glass-card p-6 rounded-xl">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-6">Variazione THI vs Umidità</p>
               <div className="h-56 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={sensitivityData.humiditySensitivity} margin={{ left: 10, right: 10, top: 10, bottom: 20 }}>
+                  <LineChart data={sensitivityData.humiditySensitivity} margin={{ left: 10, right: 30, top: 10, bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                     <XAxis 
                       dataKey="name" 
@@ -504,6 +536,10 @@ export default function App() {
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                       labelStyle={{ fontWeight: 'bold', fontSize: '12px', color: '#1e293b' }}
                     />
+                    <ReferenceLine y={72} stroke="#f59e0b" strokeDasharray="3 3" label={{ position: 'right', value: '72', fill: '#f59e0b', fontSize: 10, fontWeight: 'bold' }} />
+                    <ReferenceLine y={75} stroke="#f97316" strokeDasharray="3 3" label={{ position: 'right', value: '75', fill: '#f97316', fontSize: 10, fontWeight: 'bold' }} />
+                    <ReferenceLine y={79} stroke="#dc2626" strokeDasharray="3 3" label={{ position: 'right', value: '79', fill: '#dc2626', fontSize: 10, fontWeight: 'bold' }} />
+                    <ReferenceLine y={84} stroke="#9333ea" strokeDasharray="3 3" label={{ position: 'right', value: '84', fill: '#9333ea', fontSize: 10, fontWeight: 'bold' }} />
                     <Line 
                       type="monotone" 
                       dataKey="thi" 
@@ -518,6 +554,19 @@ export default function App() {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
+              {sensitivityData.criticalHumidities.length > 0 && (
+                <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">Punti di Transizione</p>
+                  <div className="space-y-1">
+                    {sensitivityData.criticalHumidities.map((cp, i) => (
+                      <div key={i} className="flex justify-between text-[10px]">
+                        <span className="text-slate-500">Soglia {cp.threshold}:</span>
+                        <span className="font-bold text-slate-700">{cp.value}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
