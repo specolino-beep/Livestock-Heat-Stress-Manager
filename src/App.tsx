@@ -148,6 +148,17 @@ const calculateTHI = (T: number, UR: number) => {
   return (1.8 * T) - ((1 - UR / 100) * (T - 14.3)) + 32;
 };
 
+const getSVP = (T: number) => 6.112 * Math.exp((17.67 * T) / (T + 243.5));
+
+const getWetBulb = (T: number, RH: number) => {
+  // Stull's formula for Wet Bulb Temperature
+  return T * Math.atan(0.151977 * Math.pow(RH + 8.313659, 0.5)) + 
+         Math.atan(T + RH) - 
+         Math.atan(RH - 1.676331) + 
+         0.00391838 * Math.pow(RH, 1.5) * Math.atan(0.023101 * RH) - 
+         4.686035;
+};
+
 // --- Main Component ---
 
 export default function App() {
@@ -166,10 +177,20 @@ export default function App() {
     const gamma = Math.log(UR / 100) + (b * T) / (c + T);
     const dewPoint = (c * gamma) / (b - gamma);
 
-    // Max Evaporative Capacity
-    const es = 6.112 * Math.exp((17.67 * T) / (T + 243.5));
-    const rhoSat = (es * 100 * 18.016) / (8.314 * (T + 273.15));
-    const evaporativeCapacity = rhoSat * (1 - UR / 100);
+    // Adiabatic Evaporative Capacity (g/m3)
+    // Refers to the amount of water that can be evaporated until saturation is reached (Wet Bulb)
+    const es = getSVP(T);
+    const ea = es * (UR / 100);
+    const Tw = getWetBulb(T, UR);
+    const es_tw = getSVP(Tw);
+    
+    const P = 1013.25; // Standard atmospheric pressure (hPa)
+    const w = 0.622 * ea / (P - ea);
+    const w_s_tw = 0.622 * es_tw / (P - es_tw);
+    
+    // Dry air density (kg/m3)
+    const rho_dry = ((P - ea) * 100 * 0.0289644) / (8.31447 * (T + 273.15));
+    const evaporativeCapacity = (w_s_tw - w) * rho_dry * 1000;
 
     let risk: RiskLevel = 'Safety';
     if (thi >= 84) risk = 'Extreme';
