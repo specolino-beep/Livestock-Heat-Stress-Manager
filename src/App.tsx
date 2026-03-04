@@ -301,17 +301,17 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div className="space-y-8">
               <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="label-text mb-0">Temperatura Aria</label>
-                  <div className="flex items-center gap-1.5">
+                <div className="flex justify-between items-center mb-4">
+                  <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">Temperatura Aria</label>
+                  <div className="flex items-center gap-2">
                     <input 
                       type="number" 
                       value={temp}
                       onChange={(e) => setTemp(Number(e.target.value))}
-                      className="w-16 px-2 py-1 text-right text-sm font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                      className="w-28 px-2 py-1.5 text-right text-xl font-black text-emerald-600 bg-emerald-50/50 border-2 border-emerald-100 rounded-lg focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all shadow-sm"
                       step="0.5"
                     />
-                    <span className="text-xs font-bold text-slate-400">°C</span>
+                    <span className="text-sm font-bold text-slate-500">°C</span>
                   </div>
                 </div>
                 <input 
@@ -321,7 +321,10 @@ export default function App() {
                   step="0.5"
                   value={temp}
                   onChange={(e) => setTemp(Number(e.target.value))}
-                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                  className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                  style={{
+                    background: `linear-gradient(to right, #10b981 0%, #10b981 ${(temp - 10) / (50 - 10) * 100}%, #e2e8f0 ${(temp - 10) / (50 - 10) * 100}%, #e2e8f0 100%)`
+                  }}
                 />
                 <div className="flex justify-between mt-2 text-[10px] font-bold text-slate-400 uppercase">
                   <span>10°C</span>
@@ -330,16 +333,16 @@ export default function App() {
               </div>
 
               <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="label-text mb-0">Umidità Relativa</label>
-                  <div className="flex items-center gap-1.5">
+                <div className="flex justify-between items-center mb-4">
+                  <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">Umidità Relativa</label>
+                  <div className="flex items-center gap-2">
                     <input 
                       type="number" 
                       value={humidity}
                       onChange={(e) => setHumidity(Number(e.target.value))}
-                      className="w-16 px-2 py-1 text-right text-sm font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                      className="w-28 px-2 py-1.5 text-right text-xl font-black text-blue-600 bg-blue-50/50 border-2 border-blue-100 rounded-lg focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
                     />
-                    <span className="text-xs font-bold text-slate-400">%</span>
+                    <span className="text-sm font-bold text-slate-500">%</span>
                   </div>
                 </div>
                 <input 
@@ -348,7 +351,10 @@ export default function App() {
                   max="100" 
                   value={humidity}
                   onChange={(e) => setHumidity(Number(e.target.value))}
-                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  style={{
+                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(humidity - 10) / (100 - 10) * 100}%, #e2e8f0 ${(humidity - 10) / (100 - 10) * 100}%, #e2e8f0 100%)`
+                  }}
                 />
                 <div className="flex justify-between mt-2 text-[10px] font-bold text-slate-400 uppercase">
                   <span>10%</span>
